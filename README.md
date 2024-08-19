@@ -6,7 +6,7 @@
 # Используемые библиотеки и технологии
 - React *https://react.dev/*
 - TypeScript *https://www.typescriptlang.org/*
-- Mantine: Библиотека готовых компонентов React *https://mantine.dev/*
+- Mantine: Библиотека готовых компонентов *https://mantine.dev/*
 - Tabler icons: Библиотека иконок для React *https://tabler.io/icons*
 # Краткое описание
 - Приложение с формами регистрации и авторизации пользователя
