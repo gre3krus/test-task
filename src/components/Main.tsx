@@ -32,7 +32,6 @@ export const Main = () => {
 
   return (
     <>
-      {/* Alert за пределами модального окна */}
       <Transition
         mounted={showAlert}
         transition="fade-right"
