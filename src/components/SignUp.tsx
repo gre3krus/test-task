@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useForm } from "@mantine/form";
+import { useDisclosure } from "@mantine/hooks";
+import { register } from "./Main";
 import {
   Button,
   TextInput,
@@ -9,6 +11,8 @@ import {
   Overlay,
   Flex,
   Loader,
+  Modal,
+  Input,
 } from "@mantine/core";
 import { IconMail } from "@tabler/icons-react";
 import "./styles.css";
@@ -22,12 +26,13 @@ type SignUpProps = {
 
 export const SignUp = ({
   switchToSignIn,
-  closeModal,
   setUserEmail,
+  closeModal,
   showTemporaryAlert,
 }: SignUpProps) => {
   const [loading, setLoading] = useState(false);
-
+  const [opened, { open, close }] = useDisclosure(false);
+  const [confirmationCode, setConfirmationCode] = useState("");
   const mailIcon = <IconMail stroke={2} />;
 
   const form = useForm({
@@ -37,28 +42,36 @@ export const SignUp = ({
     initialValues: {
       email: "",
       password: "",
-      confirmPassword: "",
+      repeat_password: "",
     },
 
     validate: {
       email: (value) =>
         /^\S+@\S+$/.test(value) ? null : "Неверный формат почты",
       password: (value) => (value === "" ? "Введите пароль" : null),
-      confirmPassword: (value, values) =>
+      repeat_password: (value, values) =>
         value !== values.password ? "Пароль не совпадает" : null,
     },
   });
 
-  const handleSubmit = (values: any) => {
+  const handleSubmit = async (values: any) => {
     setLoading(true);
+    setUserEmail(values.email);
+    await register(
+      values.email,
+      values.password,
+      values.repeat_password,
+      closeModal,
+      showTemporaryAlert,
+      setLoading,
+      confirmationCode
+    );
+  };
 
-    setTimeout(() => {
-      setLoading(false);
-      setUserEmail(values.email);
-      console.log(values);
-      closeModal();
-      showTemporaryAlert();
-    }, 800);
+  // Функция для обработки клика на кнопку подтверждения кода
+  const handleConfirmCode = () => {
+    console.log("Confirmation Code:", confirmationCode);
+    close();
   };
 
   return (
@@ -83,8 +96,8 @@ export const SignUp = ({
           mt="sm"
           label="Подтвердите пароль"
           placeholder="Подтвердите пароль"
-          key={form.key("confirmPassword")}
-          {...form.getInputProps("confirmPassword")}
+          key={form.key("repeat_password")}
+          {...form.getInputProps("repeat_password")}
         />
 
         <Group justify="space-between" mt="md">
@@ -96,9 +109,27 @@ export const SignUp = ({
           >
             Уже есть аккаунт? Войти
           </Text>
-          <Button type="submit" disabled={loading}>
+          <Button type="submit" onClick={open}>
             Зарегистрироваться
           </Button>
+          <Modal
+            opened={opened}
+            onClose={close}
+            title="Подтвердите почту"
+            centered
+          >
+            <Text size="xs">
+              Сообщение с подтверждением отправлено на почту
+            </Text>
+            <Input
+              placeholder="Код"
+              value={confirmationCode}
+              onChange={(event) =>
+                setConfirmationCode(event.currentTarget.value)
+              }
+            />
+            <Button onClick={handleConfirmCode}>Подтвердить код</Button>
+          </Modal>
         </Group>
         {loading && (
           <Overlay backgroundOpacity={0.55} color="#000" zIndex={1000}>
