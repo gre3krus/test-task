@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
-import { register } from "./Main";
+import { register, confirmRegister } from "./requests";
 import {
   Button,
   TextInput,
@@ -21,14 +21,12 @@ type SignUpProps = {
   switchToSignIn: () => void;
   closeModal: () => void;
   setUserEmail: (email: string) => void;
-  showTemporaryAlert: () => void;
 };
 
 export const SignUp = ({
   switchToSignIn,
   setUserEmail,
   closeModal,
-  showTemporaryAlert,
 }: SignUpProps) => {
   const [loading, setLoading] = useState(false);
   const [opened, { open, close }] = useDisclosure(false);
@@ -55,23 +53,19 @@ export const SignUp = ({
   });
 
   const handleSubmit = async (values: any) => {
-    setLoading(true);
+    open();
     setUserEmail(values.email);
-    await register(
-      values.email,
-      values.password,
-      values.repeat_password,
-      closeModal,
-      showTemporaryAlert,
-      setLoading,
-      confirmationCode
-    );
+    await register(values.email, values.password, values.repeat_password);
   };
 
-  // Функция для обработки клика на кнопку подтверждения кода
   const handleConfirmCode = () => {
-    console.log("Confirmation Code:", confirmationCode);
+    setLoading(true);
+    confirmRegister(confirmationCode);
     close();
+    setTimeout(() => {
+      setLoading(false);
+      closeModal();
+    }, 900);
   };
 
   return (
@@ -109,26 +103,32 @@ export const SignUp = ({
           >
             Уже есть аккаунт? Войти
           </Text>
-          <Button type="submit" onClick={open}>
-            Зарегистрироваться
-          </Button>
+          <Button type="submit">Зарегистрироваться</Button>
           <Modal
             opened={opened}
             onClose={close}
             title="Подтвердите почту"
+            size="xs"
             centered
           >
-            <Text size="xs">
-              Сообщение с подтверждением отправлено на почту
-            </Text>
-            <Input
-              placeholder="Код"
-              value={confirmationCode}
-              onChange={(event) =>
-                setConfirmationCode(event.currentTarget.value)
-              }
-            />
-            <Button onClick={handleConfirmCode}>Подтвердить код</Button>
+            <Flex
+              justify="center"
+              align="flex-start"
+              direction="column"
+              gap="md"
+            >
+              <Text size="xs">
+                Сообщение с подтверждением отправлено на почту
+              </Text>
+              <Input
+                placeholder="Код"
+                value={confirmationCode}
+                onChange={(event) =>
+                  setConfirmationCode(event.currentTarget.value)
+                }
+              />
+              <Button onClick={handleConfirmCode}>Подтвердить код</Button>
+            </Flex>
           </Modal>
         </Group>
         {loading && (

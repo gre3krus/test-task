@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useForm } from "@mantine/form";
+import { auth } from "./requests";
 import {
   Group,
   PasswordInput,
@@ -17,28 +18,23 @@ type SignInProps = {
   switchToSignUp: () => void;
   closeModal: () => void;
   setUserEmail: (email: string) => void;
-  showTemporaryAlert: () => void;
 };
 
 export const SignIn = ({
   switchToSignUp,
   closeModal,
   setUserEmail,
-  showTemporaryAlert,
 }: SignInProps) => {
   const [loading, setLoading] = useState(false);
 
-  const mailIcon = <IconMail stroke={2} />;
-
   const handleSubmit = (values: any) => {
     setLoading(true);
+    auth(values.email, values.password);
 
     setTimeout(() => {
       setLoading(false);
       setUserEmail(values.email);
-      console.log(values);
       closeModal();
-      showTemporaryAlert();
     }, 800);
   };
 
@@ -63,7 +59,7 @@ export const SignIn = ({
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <TextInput
           leftSectionPointerEvents="none"
-          leftSection={mailIcon}
+          leftSection={<IconMail stroke={2} />}
           label="Почта"
           placeholder="Почта"
           key={form.key("email")}
