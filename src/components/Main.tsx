@@ -2,18 +2,32 @@ import { useState } from "react";
 import "@mantine/core/styles.css";
 import { Modal, Button, Box, Alert, Transition, rem } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconCheck } from "@tabler/icons-react";
+import { IconCheck, IconExclamationCircle } from "@tabler/icons-react";
 import { SignUp } from "./SignUp";
 import { SignIn } from "./SignIn";
-import { showError, showSuccess } from "./requests";
 
 export const Main = () => {
   const [signIn, setSignIn] = useState(true);
   const [opened, { open, close }] = useDisclosure(false);
-
   const [userEmail, setUserEmail] = useState("");
+  const [showError, setShowError] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
-  const title = () => (signIn ? "Авторизация" : "Регистрация");
+  const showErrorAlert = () => {
+    setShowError(true);
+
+    setTimeout(() => {
+      setShowError(false);
+    }, 2600);
+  };
+
+  const showSuccessAlert = () => {
+    setShowSuccess(true);
+
+    setTimeout(() => {
+      setShowSuccess(false);
+    }, 2600);
+  };
 
   return (
     <>
@@ -59,7 +73,7 @@ export const Main = () => {
             variant="filled"
             color="red"
             title={signIn ? "Ошибка авторизации" : "Ошибка регистрации"}
-            icon={<IconCheck style={{ width: rem(20), height: rem(20) }} />}
+            icon={<IconExclamationCircle stroke={2} />}
             style={{
               position: "fixed",
               top: rem(16),
@@ -76,7 +90,7 @@ export const Main = () => {
       <Modal
         opened={opened}
         centered
-        title={title()}
+        title={signIn ? "Авторизация" : "Регистрация"}
         overlayProps={{
           backgroundOpacity: 0.55,
           blur: 3,
@@ -89,12 +103,16 @@ export const Main = () => {
               switchToSignUp={() => setSignIn(false)}
               closeModal={close}
               setUserEmail={setUserEmail}
+              showErrorAlert={showErrorAlert}
+              showSuccessAlert={showSuccessAlert}
             />
           ) : (
             <SignUp
               switchToSignIn={() => setSignIn(true)}
               closeModal={close}
               setUserEmail={setUserEmail}
+              showErrorAlert={showErrorAlert}
+              showSuccessAlert={showSuccessAlert}
             />
           )}
         </Box>

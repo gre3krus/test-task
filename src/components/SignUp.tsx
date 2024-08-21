@@ -21,12 +21,16 @@ type SignUpProps = {
   switchToSignIn: () => void;
   closeModal: () => void;
   setUserEmail: (email: string) => void;
+  showErrorAlert: () => void;
+  showSuccessAlert: () => void;
 };
 
 export const SignUp = ({
   switchToSignIn,
   setUserEmail,
   closeModal,
+  showErrorAlert,
+  showSuccessAlert,
 }: SignUpProps) => {
   const [loading, setLoading] = useState(false);
   const [opened, { open, close }] = useDisclosure(false);
@@ -36,13 +40,11 @@ export const SignUp = ({
   const form = useForm({
     mode: "uncontrolled",
     validateInputOnChange: true,
-
     initialValues: {
       email: "",
       password: "",
       repeat_password: "",
     },
-
     validate: {
       email: (value) =>
         /^\S+@\S+$/.test(value) ? null : "Неверный формат почты",
@@ -53,19 +55,51 @@ export const SignUp = ({
   });
 
   const handleSubmit = async (values: any) => {
-    open();
-    setUserEmail(values.email);
-    await register(values.email, values.password, values.repeat_password);
+    setLoading(true);
+    try {
+      const response = await register(
+        values.email,
+        values.password,
+        values.repeat_password
+      );
+
+      if (response.ok) {
+        setUserEmail(values.email);
+        open();
+      } else {
+        showErrorAlert();
+        close();
+        return;
+      }
+    } catch (error) {
+      showErrorAlert();
+      close();
+      return;
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleConfirmCode = () => {
+  const handleConfirmCode = async () => {
     setLoading(true);
-    confirmRegister(confirmationCode);
-    close();
-    setTimeout(() => {
+    try {
+      const response = await confirmRegister(confirmationCode);
+
+      if (response.ok) {
+        showSuccessAlert();
+        close();
+        setTimeout(() => {
+          setLoading(false);
+          closeModal();
+        }, 900);
+      } else {
+        showErrorAlert();
+      }
+    } catch (error) {
+      showErrorAlert();
+    } finally {
       setLoading(false);
-      closeModal();
-    }, 900);
+    }
   };
 
   return (
@@ -85,7 +119,6 @@ export const SignUp = ({
           key={form.key("password")}
           {...form.getInputProps("password")}
         />
-
         <PasswordInput
           mt="sm"
           label="Подтвердите пароль"
@@ -93,7 +126,6 @@ export const SignUp = ({
           key={form.key("repeat_password")}
           {...form.getInputProps("repeat_password")}
         />
-
         <Group justify="space-between" mt="md">
           <Text
             size="xs"
