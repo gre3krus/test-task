@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useForm } from "@mantine/form";
+import { auth } from "./requests";
 import {
   Group,
   PasswordInput,
@@ -17,40 +18,45 @@ type SignInProps = {
   switchToSignUp: () => void;
   closeModal: () => void;
   setUserEmail: (email: string) => void;
-  showTemporaryAlert: () => void;
+  showErrorAlert: () => void;
+  showSuccessAlert: () => void;
 };
 
 export const SignIn = ({
   switchToSignUp,
   closeModal,
   setUserEmail,
-  showTemporaryAlert,
+  showErrorAlert,
+  showSuccessAlert,
 }: SignInProps) => {
   const [loading, setLoading] = useState(false);
 
-  const mailIcon = <IconMail stroke={2} />;
-
-  const handleSubmit = (values: any) => {
+  const handleSubmit = async (values: any) => {
     setLoading(true);
+    try {
+      const response = await auth(values.email, values.password);
 
-    setTimeout(() => {
+      if (response.ok) {
+        setUserEmail(values.email);
+        showSuccessAlert();
+        closeModal();
+      } else {
+        showErrorAlert();
+      }
+    } catch (error) {
+      showErrorAlert();
+    } finally {
       setLoading(false);
-      setUserEmail(values.email);
-      console.log(values);
-      closeModal();
-      showTemporaryAlert();
-    }, 800);
+    }
   };
 
   const form = useForm({
     mode: "uncontrolled",
     validateInputOnChange: true,
-
     initialValues: {
       email: "",
       password: "",
     },
-
     validate: {
       email: (value) =>
         /^\S+@\S+$/.test(value) ? null : "Неверный формат почты",
@@ -63,7 +69,7 @@ export const SignIn = ({
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <TextInput
           leftSectionPointerEvents="none"
-          leftSection={mailIcon}
+          leftSection={<IconMail stroke={2} />}
           label="Почта"
           placeholder="Почта"
           key={form.key("email")}

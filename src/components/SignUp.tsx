@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useForm } from "@mantine/form";
+import { useDisclosure } from "@mantine/hooks";
+import { register, confirmRegister } from "./requests";
 import {
   Button,
   TextInput,
@@ -9,6 +11,8 @@ import {
   Overlay,
   Flex,
   Loader,
+  Modal,
+  Input,
 } from "@mantine/core";
 import { IconMail } from "@tabler/icons-react";
 import "./styles.css";
@@ -17,48 +21,85 @@ type SignUpProps = {
   switchToSignIn: () => void;
   closeModal: () => void;
   setUserEmail: (email: string) => void;
-  showTemporaryAlert: () => void;
+  showErrorAlert: () => void;
+  showSuccessAlert: () => void;
 };
 
 export const SignUp = ({
   switchToSignIn,
-  closeModal,
   setUserEmail,
-  showTemporaryAlert,
+  closeModal,
+  showErrorAlert,
+  showSuccessAlert,
 }: SignUpProps) => {
   const [loading, setLoading] = useState(false);
-
+  const [opened, { open, close }] = useDisclosure(false);
+  const [confirmationCode, setConfirmationCode] = useState("");
   const mailIcon = <IconMail stroke={2} />;
 
   const form = useForm({
     mode: "uncontrolled",
     validateInputOnChange: true,
-
     initialValues: {
       email: "",
       password: "",
-      confirmPassword: "",
+      repeat_password: "",
     },
-
     validate: {
       email: (value) =>
         /^\S+@\S+$/.test(value) ? null : "Неверный формат почты",
       password: (value) => (value === "" ? "Введите пароль" : null),
-      confirmPassword: (value, values) =>
+      repeat_password: (value, values) =>
         value !== values.password ? "Пароль не совпадает" : null,
     },
   });
 
-  const handleSubmit = (values: any) => {
+  const handleSubmit = async (values: any) => {
     setLoading(true);
+    try {
+      const response = await register(
+        values.email,
+        values.password,
+        values.repeat_password
+      );
 
-    setTimeout(() => {
+      if (response.ok) {
+        setUserEmail(values.email);
+        open();
+      } else {
+        showErrorAlert();
+        close();
+        return;
+      }
+    } catch (error) {
+      showErrorAlert();
+      close();
+      return;
+    } finally {
       setLoading(false);
-      setUserEmail(values.email);
-      console.log(values);
-      closeModal();
-      showTemporaryAlert();
-    }, 800);
+    }
+  };
+
+  const handleConfirmCode = async () => {
+    setLoading(true);
+    try {
+      const response = await confirmRegister(confirmationCode);
+
+      if (response.ok) {
+        showSuccessAlert();
+        close();
+        setTimeout(() => {
+          setLoading(false);
+          closeModal();
+        }, 900);
+      } else {
+        showErrorAlert();
+      }
+    } catch (error) {
+      showErrorAlert();
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -78,15 +119,13 @@ export const SignUp = ({
           key={form.key("password")}
           {...form.getInputProps("password")}
         />
-
         <PasswordInput
           mt="sm"
           label="Подтвердите пароль"
           placeholder="Подтвердите пароль"
-          key={form.key("confirmPassword")}
-          {...form.getInputProps("confirmPassword")}
+          key={form.key("repeat_password")}
+          {...form.getInputProps("repeat_password")}
         />
-
         <Group justify="space-between" mt="md">
           <Text
             size="xs"
@@ -96,9 +135,33 @@ export const SignUp = ({
           >
             Уже есть аккаунт? Войти
           </Text>
-          <Button type="submit" disabled={loading}>
-            Зарегистрироваться
-          </Button>
+          <Button type="submit">Зарегистрироваться</Button>
+          <Modal
+            opened={opened}
+            onClose={close}
+            title="Подтвердите почту"
+            size="xs"
+            centered
+          >
+            <Flex
+              justify="center"
+              align="flex-start"
+              direction="column"
+              gap="md"
+            >
+              <Text size="xs">
+                Сообщение с подтверждением отправлено на почту
+              </Text>
+              <Input
+                placeholder="Код"
+                value={confirmationCode}
+                onChange={(event) =>
+                  setConfirmationCode(event.currentTarget.value)
+                }
+              />
+              <Button onClick={handleConfirmCode}>Подтвердить код</Button>
+            </Flex>
+          </Modal>
         </Group>
         {loading && (
           <Overlay backgroundOpacity={0.55} color="#000" zIndex={1000}>

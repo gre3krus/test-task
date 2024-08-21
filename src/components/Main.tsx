@@ -2,38 +2,37 @@ import { useState } from "react";
 import "@mantine/core/styles.css";
 import { Modal, Button, Box, Alert, Transition, rem } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconCheck } from "@tabler/icons-react";
+import { IconCheck, IconExclamationCircle } from "@tabler/icons-react";
 import { SignUp } from "./SignUp";
 import { SignIn } from "./SignIn";
 
 export const Main = () => {
   const [signIn, setSignIn] = useState(true);
   const [opened, { open, close }] = useDisclosure(false);
-  const [showAlert, setShowAlert] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [showError, setShowError] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
-  const handleSwitchToSignUp = () => {
-    setSignIn(false);
-  };
-
-  const handleSwitchToSignIn = () => {
-    setSignIn(true);
-  };
-
-  const title = () => (signIn ? "Авторизация" : "Регистрация");
-
-  const showTemporaryAlert = () => {
-    setShowAlert(true);
+  const showErrorAlert = () => {
+    setShowError(true);
 
     setTimeout(() => {
-      setShowAlert(false);
+      setShowError(false);
+    }, 2600);
+  };
+
+  const showSuccessAlert = () => {
+    setShowSuccess(true);
+
+    setTimeout(() => {
+      setShowSuccess(false);
     }, 2600);
   };
 
   return (
     <>
       <Transition
-        mounted={showAlert}
+        mounted={showSuccess}
         transition="fade-right"
         duration={300}
         timingFunction="ease"
@@ -56,7 +55,34 @@ export const Main = () => {
               ...styles,
             }}
           >
-            Добро пожаловать, {userEmail}
+            {signIn
+              ? `С возвращением, ${userEmail}!`
+              : `Добро пожаловать, ${userEmail}!`}
+          </Alert>
+        )}
+      </Transition>
+
+      <Transition
+        mounted={showError}
+        transition="fade-right"
+        duration={300}
+        timingFunction="ease"
+      >
+        {(styles) => (
+          <Alert
+            variant="filled"
+            color="red"
+            title={signIn ? "Ошибка авторизации" : "Ошибка регистрации"}
+            icon={<IconExclamationCircle stroke={2} />}
+            style={{
+              position: "fixed",
+              top: rem(16),
+              left: rem(16),
+              zIndex: 1100,
+              ...styles,
+            }}
+          >
+            {signIn ? `Неверные почта/пароль` : `Неккоректные данные`}
           </Alert>
         )}
       </Transition>
@@ -64,7 +90,7 @@ export const Main = () => {
       <Modal
         opened={opened}
         centered
-        title={title()}
+        title={signIn ? "Авторизация" : "Регистрация"}
         overlayProps={{
           backgroundOpacity: 0.55,
           blur: 3,
@@ -74,17 +100,19 @@ export const Main = () => {
         <Box maw={500} mx="auto">
           {signIn ? (
             <SignIn
-              switchToSignUp={handleSwitchToSignUp}
+              switchToSignUp={() => setSignIn(false)}
               closeModal={close}
               setUserEmail={setUserEmail}
-              showTemporaryAlert={showTemporaryAlert}
+              showErrorAlert={showErrorAlert}
+              showSuccessAlert={showSuccessAlert}
             />
           ) : (
             <SignUp
-              switchToSignIn={handleSwitchToSignIn}
+              switchToSignIn={() => setSignIn(true)}
               closeModal={close}
               setUserEmail={setUserEmail}
-              showTemporaryAlert={showTemporaryAlert}
+              showErrorAlert={showErrorAlert}
+              showSuccessAlert={showSuccessAlert}
             />
           )}
         </Box>
