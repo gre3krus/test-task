@@ -59,7 +59,7 @@ export const SignIn = ({
     },
     validate: {
       email: (value) =>
-        /^\S+@\S+$/.test(value) ? null : "Неверный формат почты",
+        /^\S+@\S+\.\S{2,}$/.test(value) ? null : "Неверный формат почты",
       password: (value) => (value === "" ? "Введите пароль" : null),
     },
   });
