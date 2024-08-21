@@ -2,6 +2,8 @@
 - git clone https://github.com/gre3krus/test-task.git
 - cd test-task
 - yarn install
+- yarn add @mantine/core @mantine/hooks
+- yarn add @tabler/icons-react
 - yarn start
 # Используемые библиотеки и технологии
 - React *https://react.dev/*
