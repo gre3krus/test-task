@@ -47,7 +47,7 @@ export const SignUp = ({
     },
     validate: {
       email: (value) =>
-        /^\S+@\S+$/.test(value) ? null : "Неверный формат почты",
+        /^\S+@\S+\.\S{2,}$/.test(value) ? null : "Неверный формат почты",
       password: (value) => (value === "" ? "Введите пароль" : null),
       repeat_password: (value, values) =>
         value !== values.password ? "Пароль не совпадает" : null,
